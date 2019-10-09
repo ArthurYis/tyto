@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package bean;
+
+//链路
+message Trace{
+    //链路标识
+    string traceId =1; 
+    //对应的请求或者入口的标识             
+    string secondId =2; 
+    //链路生成的时间           
+    int64 traceSTime =3;    
+    //链路完成的时间    
+    int64 traceETime =4; 
+    //所有链路生命周期内的相关节点集合          
+    map<string, Span> spans =5;    
+    //用户标识
+    string userId=6;
+    //用户名称
+    string userName=7; 
+    //生命周期的时长
+    int64 duration=8;
+    //是否记录到日志中
+    bool logging=9;
+    //描述
+    string desc=10;
+}
+message baseResponse {
+    //返回码
+    int32 code = 1;
+    //返回信息
+    string message = 2;
+}
+//节点
+message Span{
+    //节点标识
+    string spanId=1;        
+    //对应的方法或者代码块的标识
+    string secondId=2;      
+    //节点创建的时间
+    int64 spanSTime =3;     
+    //节点结束的时间
+    int64 spanETime=4;      
+    //此节点生命周期内描述事件详情的标记集合
+    repeated Tag Tags=5;    
+    //关联的链路标识
+    string TraceId =6;
+    //生命周期的时长
+    int64 duration=7;
+}
+
+
+//用来描述节点生命周期内任何事件的标记
+message Tag {
+    string spanId=1; //关联的spanId
+    string tagId =2; //tag标识
+	string desc=3;   //事件描述的内容
+	int64 time=4;     //事件发生的时间
+}
+
+
+
+service TraceHandler {
+    rpc AddTrace(Trace) returns (baseResponse) {}
+    rpc FlushTrace(Trace) returns (baseResponse) {}
+}
+
+service SpanHandler {
+    rpc AddSpan(Span) returns (baseResponse) {}
+    rpc FlushSpan(Span) returns (baseResponse) {}
+    rpc AddTag(Tag) returns (baseResponse) {}
+    
+}
+
+message ping{
+    bool ping =1;
+}
+message pong{
+    bool pong=1;
+}
+service keepAlive {
+    rpc Ping(ping) returns (pong) {}
+}
