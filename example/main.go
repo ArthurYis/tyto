@@ -2,14 +2,14 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-09-26 08:53:58
- * @LastEditTime: 2019-10-09 17:25:29
+ * @LastEditTime: 2019-10-10 08:57:56
  * @LastEditors: Arthur
  */
 package main
 
 import (
+	"athena.com/tyto"
 	"athena.com/tyto/bean"
-	"athena.com/tyto/client"
 	"math/rand"
 	"time"
 )
