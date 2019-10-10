@@ -2,10 +2,10 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-08-24 17:28:25
- * @LastEditTime: 2019-10-09 15:00:04
+ * @LastEditTime: 2019-10-10 09:07:29
  * @LastEditors: Arthur
  */
-package client
+package tyto
 
 import (
 	"athena.com/tyto/bean"
