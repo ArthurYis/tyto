@@ -24,7 +24,18 @@ message Trace{
     bool logging=9;
     //描述
     string desc=10;
+    //平台标识
+    string platform=11;
+    //超时时间 单位为秒
+    int64 timeout=12;
+    //flush时需要记录的此链路中的所有的span标识和tag标识
+    subs subs = 13;
 }
+message subs{
+    map<string, bool> spans =1; 
+    map<string, bool> tags =2; 
+}
+
 message baseResponse {
     //返回码
     int32 code = 1;
@@ -52,10 +63,11 @@ message Span{
 
 //用来描述节点生命周期内任何事件的标记
 message Tag {
-    string spanId=1; //关联的spanId
-    string tagId =2; //tag标识
-	string desc=3;   //事件描述的内容
-	int64 time=4;     //事件发生的时间
+    string traceId=1;//关联的traceId
+    string spanId=2; //关联的spanId
+    string tagId =3; //tag标识
+	string desc=4;   //事件描述的内容
+	int64 time=5;     //事件发生的时间
 }
 
 

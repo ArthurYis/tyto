@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-09-26 08:53:58
- * @LastEditTime: 2019-10-10 08:57:56
+ * @LastEditTime: 2019-12-04 14:41:12
  * @LastEditors: Arthur
  */
 package main
@@ -23,17 +23,17 @@ func main() {
 }
 
 func trace(secondId string) {
-	tyto := client.Default()
-	tyto.Trace(secondId)
+	tyto := tyto.Default()
+	tyto.Trace(bean.Trace{Platform: "platform_001", SecondId: secondId, UserId: "userId002", UserName: "userName002", Logging: false})
 	defer tyto.FlushT()
 	span(tyto)
 }
 
-func span(tyto client.Tyto) {
+func span(tyto tyto.Tyto) {
 	spanId := tyto.Span(RandString(10))
 	defer tyto.FlushS(spanId)
 	span1(tyto)
-	tyto.Tag(&bean.Tag{
+	tyto.Tag(bean.Tag{
 		SpanId: spanId,
 		TagId:  RandString(10),
 		Desc:   "tage1",
@@ -41,10 +41,10 @@ func span(tyto client.Tyto) {
 	})
 }
 
-func span1(tyto client.Tyto) {
+func span1(tyto tyto.Tyto) {
 	spanId := tyto.Span(RandString(10))
 	defer tyto.FlushS(spanId)
-	tyto.Tag(&bean.Tag{
+	tyto.Tag(bean.Tag{
 		SpanId: spanId,
 		TagId:  RandString(10),
 		Desc:   "tage2",

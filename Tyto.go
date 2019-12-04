@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-08-24 17:28:25
- * @LastEditTime: 2019-10-10 09:07:29
+ * @LastEditTime: 2019-12-04 14:40:23
  * @LastEditors: Arthur
  */
 package tyto
@@ -17,13 +17,13 @@ import (
 
 //链路跟踪接口
 type Tyto interface {
-	Trace(string) string //开启一个链路的生命周期
-	FlushT()             //一个链路的生命周期的终结
+	Trace(bean.Trace) string //开启一个链路的生命周期
+	FlushT()                 //一个链路的生命周期的终结
 
 	Span(string) string //开启一个链路中节点
 	FlushS(string)      //一个节点的终结
 
-	Tag(*bean.Tag) //在跟踪过程中对某个节点进行注解说明
+	Tag(bean.Tag) //在跟踪过程中对某个节点进行注解说明
 }
 
 type Client interface {
@@ -54,11 +54,15 @@ type tytor struct {
 	tags   map[string]*bean.Tag
 }
 
-func (self *tytor) Trace(secondId string) string {
-	trace := &bean.Trace{}
+func (self *tytor) Trace(t bean.Trace) string {
+	trace := &bean.Trace{Subs: &bean.Subs{Spans: make(map[string]bool), Tags: make(map[string]bool)}}
+	trace.SecondId = t.SecondId
+	trace.UserId = t.UserId
+	trace.UserName = t.UserName
+	trace.Platform = t.Platform
 	trace.TraceId = self.ID.Generate().String()
 	trace.TraceSTime = time.Now().UTC().UnixNano()
-	trace.Logging = false
+	trace.Logging = t.Logging
 	self.trace = trace
 	go self.client.Trace(trace)
 	return trace.TraceId
@@ -74,6 +78,7 @@ func (self *tytor) Span(secondId string) string {
 	span.TraceId = self.trace.TraceId
 	span.SpanSTime = time.Now().UTC().UnixNano()
 	self.spans[span.SpanId] = span
+	self.trace.Subs.Spans[span.SpanId] = true
 	go self.client.Span(span)
 	return span.SpanId
 }
@@ -82,9 +87,17 @@ func (self *tytor) FlushS(spanId string) {
 	span.SpanETime = time.Now().UTC().UnixNano()
 	delete(self.spans, spanId)
 	go self.client.FlushS(span)
-
 }
 
-func (self *tytor) Tag(tag *bean.Tag) {
-	go self.client.Tag(tag)
+func (self *tytor) Tag(tag bean.Tag) {
+	newTag := &bean.Tag{
+		TraceId: self.trace.TraceId,
+		SpanId:  tag.SpanId,
+		TagId:   self.ID.Generate().String(),
+		Desc:    tag.Desc,
+		Time:    time.Now().UTC().UnixNano(),
+	}
+
+	self.trace.Subs.Tags[newTag.TagId] = true
+	go self.client.Tag(newTag)
 }
