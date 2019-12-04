@@ -30,6 +30,8 @@ message Trace{
     int64 timeout=12;
     //flush时需要记录的此链路中的所有的span标识和tag标识
     subs subs = 13;
+    //上层链路标识
+    string fromId=14;
 }
 message subs{
     map<string, bool> spans =1; 
@@ -58,6 +60,8 @@ message Span{
     string TraceId =6;
     //生命周期的时长
     int64 duration=7;
+    //上层span标识
+    string fromId=8;
 }
 
 

@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-08-24 17:28:25
- * @LastEditTime: 2019-12-04 14:40:23
+ * @LastEditTime: 2019-12-04 17:19:26
  * @LastEditors: Arthur
  */
 package tyto
@@ -10,8 +10,8 @@ package tyto
 import (
 	"athena.com/tyto/bean"
 	"athena.com/tyto/client/grpc"
-	// "athena.com/tyto/client/http"
 	"athena.com/tyto/utils"
+	"strings"
 	"time"
 )
 
@@ -63,6 +63,11 @@ func (self *tytor) Trace(t bean.Trace) string {
 	trace.TraceId = self.ID.Generate().String()
 	trace.TraceSTime = time.Now().UTC().UnixNano()
 	trace.Logging = t.Logging
+	if len(strings.TrimSpace(t.FromId)) == 0 {
+		trace.FromId = "0"
+	} else {
+		trace.FromId = t.FromId
+	}
 	self.trace = trace
 	go self.client.Trace(trace)
 	return trace.TraceId
@@ -72,9 +77,10 @@ func (self *tytor) FlushT() {
 	go self.client.FlushT(self.trace)
 }
 
-func (self *tytor) Span(secondId string) string {
+func (self *tytor) Span(fromId string) string {
 	span := &bean.Span{}
 	span.SpanId = self.ID.Generate().String()
+	span.FromId = fromId
 	span.TraceId = self.trace.TraceId
 	span.SpanSTime = time.Now().UTC().UnixNano()
 	self.spans[span.SpanId] = span

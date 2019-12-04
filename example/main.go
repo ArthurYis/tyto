@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-09-26 08:53:58
- * @LastEditTime: 2019-12-04 14:41:12
+ * @LastEditTime: 2019-12-04 17:21:06
  * @LastEditors: Arthur
  */
 package main
@@ -23,17 +23,17 @@ func main() {
 }
 
 func trace(secondId string) {
-	tyto := tyto.Default()
-	tyto.Trace(bean.Trace{Platform: "platform_001", SecondId: secondId, UserId: "userId002", UserName: "userName002", Logging: false})
-	defer tyto.FlushT()
-	span(tyto)
+	tytor := tyto.Default()
+	tytor.Trace(bean.Trace{Platform: "platform_001", SecondId: secondId, UserId: "userId002", UserName: "userName002", Logging: false, FromId: "0"})
+	defer tytor.FlushT()
+	span(tytor, "0")
 }
 
-func span(tyto tyto.Tyto) {
-	spanId := tyto.Span(RandString(10))
-	defer tyto.FlushS(spanId)
-	span1(tyto)
-	tyto.Tag(bean.Tag{
+func span(tytor tyto.Tyto, fromId string) {
+	spanId := tytor.Span(fromId)
+	defer tytor.FlushS(spanId)
+	span1(tytor, spanId)
+	tytor.Tag(bean.Tag{
 		SpanId: spanId,
 		TagId:  RandString(10),
 		Desc:   "tage1",
@@ -41,10 +41,10 @@ func span(tyto tyto.Tyto) {
 	})
 }
 
-func span1(tyto tyto.Tyto) {
-	spanId := tyto.Span(RandString(10))
-	defer tyto.FlushS(spanId)
-	tyto.Tag(bean.Tag{
+func span1(tytor tyto.Tyto, fromId string) {
+	spanId := tytor.Span(fromId)
+	defer tytor.FlushS(spanId)
+	tytor.Tag(bean.Tag{
 		SpanId: spanId,
 		TagId:  RandString(10),
 		Desc:   "tage2",
