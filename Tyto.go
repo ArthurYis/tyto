@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-08-24 17:28:25
- * @LastEditTime: 2019-12-04 17:19:26
+ * @LastEditTime: 2019-12-04 17:32:32
  * @LastEditors: Arthur
  */
 package tyto
@@ -80,7 +80,11 @@ func (self *tytor) FlushT() {
 func (self *tytor) Span(fromId string) string {
 	span := &bean.Span{}
 	span.SpanId = self.ID.Generate().String()
-	span.FromId = fromId
+	if len(strings.TrimSpace(fromId)) == 0 {
+		span.FromId = "0"
+	} else {
+		span.FromId = fromId
+	}
 	span.TraceId = self.trace.TraceId
 	span.SpanSTime = time.Now().UTC().UnixNano()
 	self.spans[span.SpanId] = span
