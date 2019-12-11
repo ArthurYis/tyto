@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-09-24 15:22:55
- * @LastEditTime: 2019-10-09 17:18:59
+ * @LastEditTime: 2019-12-11 10:03:43
  * @LastEditors: Arthur
  */
 package http
@@ -37,20 +37,6 @@ func (self *HttpClient) Trace(trace *bean.Trace) (int, string) {
 	return -1, ""
 }
 
-func (self *HttpClient) FlushT(trace *bean.Trace) (int, string) {
-	//PUT
-	bs, err := json.Marshal(trace)
-	if err != nil {
-		logs.Error("HttpClient.json.Marshal.err:" + err.Error())
-		return -1, ""
-	}
-	response := do(http.MethodPut, "/tyto/hedwig/trace/flush", bs)
-	if response != nil {
-		return response.Code, response.Message
-	}
-	return -1, ""
-}
-
 func (self *HttpClient) Span(span *bean.Span) (int, string) {
 	//POST
 	bs, err := json.Marshal(span)
@@ -59,20 +45,6 @@ func (self *HttpClient) Span(span *bean.Span) (int, string) {
 		return -1, ""
 	}
 	response := do(http.MethodPost, "/tyto/hedwig/span/add", bs)
-	if response != nil {
-		return response.Code, response.Message
-	}
-	return -1, ""
-}
-
-func (self *HttpClient) FlushS(span *bean.Span) (int, string) {
-	//PUT
-	bs, err := json.Marshal(span)
-	if err != nil {
-		logs.Error("HttpClient.json.Marshal.err:" + err.Error())
-		return -1, ""
-	}
-	response := do(http.MethodPut, "/tyto/hedwig/span/flush", bs)
 	if response != nil {
 		return response.Code, response.Message
 	}

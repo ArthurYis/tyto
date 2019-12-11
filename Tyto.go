@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-08-24 17:28:25
- * @LastEditTime: 2019-12-04 17:32:32
+ * @LastEditTime: 2019-12-11 10:02:15
  * @LastEditors: Arthur
  */
 package tyto
@@ -11,58 +11,66 @@ import (
 	"athena.com/tyto/bean"
 	"athena.com/tyto/client/grpc"
 	"athena.com/tyto/utils"
+	logs "github.com/cihub/seelog"
+	"os"
 	"strings"
 	"time"
 )
 
+var node *utils.Node
+
 //链路跟踪接口
 type Tyto interface {
 	Trace(bean.Trace) string //开启一个链路的生命周期
-	FlushT()                 //一个链路的生命周期的终结
+	FlushT()
 
-	Span(string) string //开启一个链路中节点
-	FlushS(string)      //一个节点的终结
+	Span(bean.Span) string //开启一个链路中节点
 
-	Tag(bean.Tag) //在跟踪过程中对某个节点进行注解说明
+	FlushS(string)
+
+	Tag(bean.Tag) //在跟踪过程中对某个点进行注解说明
 }
 
 type Client interface {
 	Trace(*bean.Trace) (int, string)
-	FlushT(*bean.Trace) (int, string)
 	Span(*bean.Span) (int, string)
-	FlushS(*bean.Span) (int, string)
 	Tag(*bean.Tag) (int, string)
 }
 
-func Default() Tyto {
-	node, _ := utils.NewNode(1)
+type tytor struct {
+	client   Client      //数据处理
+	ID       *utils.Node //ID生成器
+	platform string      //平台标识
+	customId string      //客户自定义请求标识或者数据标识
+	trace    *bean.Trace //
+	spans    map[string]*bean.Span
+}
+
+func Default(platform, customId string) Tyto {
 	return &tytor{
 		ID: node,
 		// client: &http.HttpClient{},
-		client: &grpc.GRPCClient{},
-		spans:  make(map[string]*bean.Span),
-		tags:   make(map[string]*bean.Tag),
+		client:   &grpc.GRPCClient{},
+		platform: platform,
+		customId: customId,
+		spans:    make(map[string]*bean.Span),
 	}
 }
 
-//TODO 如果记录链路信息失败，需要将失败的信息记录到 tytor中 定时进行尝试重新记录
-type tytor struct {
-	client Client
-	ID     *utils.Node
-	trace  *bean.Trace
-	spans  map[string]*bean.Span
-	tags   map[string]*bean.Tag
-}
-
 func (self *tytor) Trace(t bean.Trace) string {
-	trace := &bean.Trace{Subs: &bean.Subs{Spans: make(map[string]bool), Tags: make(map[string]bool)}}
-	trace.SecondId = t.SecondId
-	trace.UserId = t.UserId
-	trace.UserName = t.UserName
-	trace.Platform = t.Platform
-	trace.TraceId = self.ID.Generate().String()
-	trace.TraceSTime = time.Now().UTC().UnixNano()
-	trace.Logging = t.Logging
+	trace := &bean.Trace{
+		Platform: self.platform,
+		CustomId: self.customId,
+		TraceId:  self.ID.Generate().String(),
+		Timeout:  t.Timeout,
+		Times:    time.Now().UTC().UnixNano(),
+		Operate:  "S",
+		Flag:     t.Flag,
+		UserId:   t.UserId,
+		UserName: t.UserName,
+		Logging:  t.Logging,
+	}
+
 	if len(strings.TrimSpace(t.FromId)) == 0 {
 		trace.FromId = "0"
 	} else {
@@ -72,42 +80,82 @@ func (self *tytor) Trace(t bean.Trace) string {
 	go self.client.Trace(trace)
 	return trace.TraceId
 }
+
 func (self *tytor) FlushT() {
-	self.trace.TraceETime = time.Now().UTC().UnixNano()
-	go self.client.FlushT(self.trace)
+	logs.Debug("flushT:" + self.trace.TraceId)
+	trace := &bean.Trace{
+		Platform: self.platform,
+		CustomId: self.customId,
+		TraceId:  self.trace.TraceId,
+		FromId:   self.trace.FromId,
+		Timeout:  self.trace.Timeout,
+		Times:    time.Now().UTC().UnixNano(),
+		Operate:  "E",
+		Flag:     self.trace.Flag,
+		UserId:   self.trace.UserId,
+		UserName: self.trace.UserName,
+		Logging:  self.trace.Logging,
+	}
+	go self.client.Trace(trace)
 }
 
-func (self *tytor) Span(fromId string) string {
-	span := &bean.Span{}
-	span.SpanId = self.ID.Generate().String()
-	if len(strings.TrimSpace(fromId)) == 0 {
+func (self *tytor) Span(s bean.Span) string {
+	span := &bean.Span{
+		TraceId:  self.trace.TraceId,
+		SpanId:   self.ID.Generate().String(),
+		Timeout:  s.Timeout,
+		Times:    time.Now().UTC().UnixNano(),
+		Operate:  "S",
+		Flag:     s.Flag,
+		Logging:  s.Logging,
+		Platform: self.platform,
+	}
+
+	if len(strings.TrimSpace(s.FromId)) == 0 {
 		span.FromId = "0"
 	} else {
-		span.FromId = fromId
+		span.FromId = s.FromId
 	}
-	span.TraceId = self.trace.TraceId
-	span.SpanSTime = time.Now().UTC().UnixNano()
 	self.spans[span.SpanId] = span
-	self.trace.Subs.Spans[span.SpanId] = true
 	go self.client.Span(span)
 	return span.SpanId
 }
+
 func (self *tytor) FlushS(spanId string) {
-	span := self.spans[spanId]
-	span.SpanETime = time.Now().UTC().UnixNano()
+	s := self.spans[spanId]
+	span := &bean.Span{
+		TraceId:  self.trace.TraceId,
+		SpanId:   s.SpanId,
+		FromId:   s.FromId,
+		Timeout:  s.Timeout,
+		Times:    time.Now().UTC().UnixNano(),
+		Operate:  "E",
+		Flag:     s.Flag,
+		Logging:  s.Logging,
+		Platform: self.platform,
+	}
 	delete(self.spans, spanId)
-	go self.client.FlushS(span)
+	go self.client.Span(span)
 }
 
-func (self *tytor) Tag(tag bean.Tag) {
-	newTag := &bean.Tag{
-		TraceId: self.trace.TraceId,
-		SpanId:  tag.SpanId,
-		TagId:   self.ID.Generate().String(),
-		Desc:    tag.Desc,
-		Time:    time.Now().UTC().UnixNano(),
+func (self *tytor) Tag(t bean.Tag) {
+	tag := &bean.Tag{
+		OwnId:    t.OwnId,
+		TagId:    self.ID.Generate().String(),
+		Times:    time.Now().UTC().UnixNano(),
+		Desc:     t.Desc,
+		Logging:  t.Logging,
+		Platform: self.platform,
 	}
 
-	self.trace.Subs.Tags[newTag.TagId] = true
-	go self.client.Tag(newTag)
+	go self.client.Tag(tag)
+}
+
+func init() {
+	n, err := utils.NewNode(1)
+	if err != nil {
+		logs.Error("NewNode.err:" + err.Error())
+		os.Exit(1)
+	}
+	node = n
 }

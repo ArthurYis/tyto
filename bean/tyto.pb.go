@@ -22,36 +22,30 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-//链路
+//用来记录链路的相关对象
 type Trace struct {
-	//链路标识
-	TraceId string `protobuf:"bytes,1,opt,name=traceId,proto3" json:"traceId,omitempty"`
-	//对应的请求或者入口的标识
-	SecondId string `protobuf:"bytes,2,opt,name=secondId,proto3" json:"secondId,omitempty"`
-	//链路生成的时间
-	TraceSTime int64 `protobuf:"varint,3,opt,name=traceSTime,proto3" json:"traceSTime,omitempty"`
-	//链路完成的时间
-	TraceETime int64 `protobuf:"varint,4,opt,name=traceETime,proto3" json:"traceETime,omitempty"`
-	//所有链路生命周期内的相关节点集合
-	Spans map[string]*Span `protobuf:"bytes,5,rep,name=spans,proto3" json:"spans,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	//用户标识
-	UserId string `protobuf:"bytes,6,opt,name=userId,proto3" json:"userId,omitempty"`
-	//用户名称
-	UserName string `protobuf:"bytes,7,opt,name=userName,proto3" json:"userName,omitempty"`
-	//生命周期的时长
-	Duration int64 `protobuf:"varint,8,opt,name=duration,proto3" json:"duration,omitempty"`
-	//是否记录到日志中
-	Logging bool `protobuf:"varint,9,opt,name=logging,proto3" json:"logging,omitempty"`
-	//描述
-	Desc string `protobuf:"bytes,10,opt,name=desc,proto3" json:"desc,omitempty"`
 	//平台标识
-	Platform string `protobuf:"bytes,11,opt,name=platform,proto3" json:"platform,omitempty"`
-	//超时时间 单位为秒
-	Timeout int64 `protobuf:"varint,12,opt,name=timeout,proto3" json:"timeout,omitempty"`
-	//flush时需要记录的此链路中的所有的span标识和tag标识
-	Subs *Subs `protobuf:"bytes,13,opt,name=subs,proto3" json:"subs,omitempty"`
-	//上层链路标识
-	FromId               string   `protobuf:"bytes,14,opt,name=fromId,proto3" json:"fromId,omitempty"`
+	Platform string `protobuf:"bytes,1,opt,name=platform,proto3" json:"platform,omitempty"`
+	//数据标识  自定义的请求标识或者数据标识
+	CustomId string `protobuf:"bytes,2,opt,name=customId,proto3" json:"customId,omitempty"`
+	//链路标识
+	TraceId string `protobuf:"bytes,3,opt,name=traceId,proto3" json:"traceId,omitempty"`
+	//流转的上层链路标识
+	FromId string `protobuf:"bytes,4,opt,name=fromId,proto3" json:"fromId,omitempty"`
+	//预计的超时时间 如果链路必须标记结束(flag=true)才生效
+	Timeout int32 `protobuf:"varint,5,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	//发生操作的时间
+	Times int64 `protobuf:"varint,6,opt,name=times,proto3" json:"times,omitempty"`
+	//进行的操作  链路的开启/结束/生命周期中做的各种操作
+	Operate string `protobuf:"bytes,7,opt,name=operate,proto3" json:"operate,omitempty"`
+	//如果操作为开启链路 表示此链路是否必须有对应的结束操作
+	Flag bool `protobuf:"varint,8,opt,name=flag,proto3" json:"flag,omitempty"`
+	//进行操作的用户标识
+	UserId string `protobuf:"bytes,9,opt,name=userId,proto3" json:"userId,omitempty"`
+	//进行操作的用户名称
+	UserName string `protobuf:"bytes,10,opt,name=userName,proto3" json:"userName,omitempty"`
+	//是否将此条记录记录到日志库中
+	Logging              bool     `protobuf:"varint,11,opt,name=logging,proto3" json:"logging,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -82,6 +76,20 @@ func (m *Trace) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Trace proto.InternalMessageInfo
 
+func (m *Trace) GetPlatform() string {
+	if m != nil {
+		return m.Platform
+	}
+	return ""
+}
+
+func (m *Trace) GetCustomId() string {
+	if m != nil {
+		return m.CustomId
+	}
+	return ""
+}
+
 func (m *Trace) GetTraceId() string {
 	if m != nil {
 		return m.TraceId
@@ -89,32 +97,39 @@ func (m *Trace) GetTraceId() string {
 	return ""
 }
 
-func (m *Trace) GetSecondId() string {
+func (m *Trace) GetFromId() string {
 	if m != nil {
-		return m.SecondId
+		return m.FromId
 	}
 	return ""
 }
 
-func (m *Trace) GetTraceSTime() int64 {
+func (m *Trace) GetTimeout() int32 {
 	if m != nil {
-		return m.TraceSTime
+		return m.Timeout
 	}
 	return 0
 }
 
-func (m *Trace) GetTraceETime() int64 {
+func (m *Trace) GetTimes() int64 {
 	if m != nil {
-		return m.TraceETime
+		return m.Times
 	}
 	return 0
 }
 
-func (m *Trace) GetSpans() map[string]*Span {
+func (m *Trace) GetOperate() string {
 	if m != nil {
-		return m.Spans
+		return m.Operate
 	}
-	return nil
+	return ""
+}
+
+func (m *Trace) GetFlag() bool {
+	if m != nil {
+		return m.Flag
+	}
+	return false
 }
 
 func (m *Trace) GetUserId() string {
@@ -131,13 +146,6 @@ func (m *Trace) GetUserName() string {
 	return ""
 }
 
-func (m *Trace) GetDuration() int64 {
-	if m != nil {
-		return m.Duration
-	}
-	return 0
-}
-
 func (m *Trace) GetLogging() bool {
 	if m != nil {
 		return m.Logging
@@ -145,86 +153,203 @@ func (m *Trace) GetLogging() bool {
 	return false
 }
 
-func (m *Trace) GetDesc() string {
+//用来记录节点的相关对象
+type Span struct {
+	//父级链路标识
+	TraceId string `protobuf:"bytes,1,opt,name=traceId,proto3" json:"traceId,omitempty"`
+	//节点标识
+	SpanId string `protobuf:"bytes,2,opt,name=spanId,proto3" json:"spanId,omitempty"`
+	//流转的上层链路标识
+	FromId string `protobuf:"bytes,3,opt,name=fromId,proto3" json:"fromId,omitempty"`
+	//预计的超时时间 如果节点必须标记结束(flag=true)才生效
+	Timeout int32 `protobuf:"varint,4,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	//发生操作的时间
+	Times int64 `protobuf:"varint,5,opt,name=times,proto3" json:"times,omitempty"`
+	//进行的操作  节点的开启/结束
+	Operate string `protobuf:"bytes,6,opt,name=operate,proto3" json:"operate,omitempty"`
+	//如果操作为开启节点 表示此节点是否必须有对应的结束操作
+	Flag bool `protobuf:"varint,7,opt,name=flag,proto3" json:"flag,omitempty"`
+	//是否将此条记录记录到日志库中
+	Logging bool `protobuf:"varint,8,opt,name=logging,proto3" json:"logging,omitempty"`
+	//平台标识
+	Platform             string   `protobuf:"bytes,9,opt,name=platform,proto3" json:"platform,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Span) Reset()         { *m = Span{} }
+func (m *Span) String() string { return proto.CompactTextString(m) }
+func (*Span) ProtoMessage()    {}
+func (*Span) Descriptor() ([]byte, []int) {
+	return fileDescriptor_65eadb3a877d1afd, []int{1}
+}
+
+func (m *Span) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Span.Unmarshal(m, b)
+}
+func (m *Span) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Span.Marshal(b, m, deterministic)
+}
+func (m *Span) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Span.Merge(m, src)
+}
+func (m *Span) XXX_Size() int {
+	return xxx_messageInfo_Span.Size(m)
+}
+func (m *Span) XXX_DiscardUnknown() {
+	xxx_messageInfo_Span.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Span proto.InternalMessageInfo
+
+func (m *Span) GetTraceId() string {
 	if m != nil {
-		return m.Desc
+		return m.TraceId
 	}
 	return ""
 }
 
-func (m *Trace) GetPlatform() string {
+func (m *Span) GetSpanId() string {
 	if m != nil {
-		return m.Platform
+		return m.SpanId
 	}
 	return ""
 }
 
-func (m *Trace) GetTimeout() int64 {
-	if m != nil {
-		return m.Timeout
-	}
-	return 0
-}
-
-func (m *Trace) GetSubs() *Subs {
-	if m != nil {
-		return m.Subs
-	}
-	return nil
-}
-
-func (m *Trace) GetFromId() string {
+func (m *Span) GetFromId() string {
 	if m != nil {
 		return m.FromId
 	}
 	return ""
 }
 
-type Subs struct {
-	Spans                map[string]bool `protobuf:"bytes,1,rep,name=spans,proto3" json:"spans,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-	Tags                 map[string]bool `protobuf:"bytes,2,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
-	XXX_unrecognized     []byte          `json:"-"`
-	XXX_sizecache        int32           `json:"-"`
-}
-
-func (m *Subs) Reset()         { *m = Subs{} }
-func (m *Subs) String() string { return proto.CompactTextString(m) }
-func (*Subs) ProtoMessage()    {}
-func (*Subs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_65eadb3a877d1afd, []int{1}
-}
-
-func (m *Subs) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Subs.Unmarshal(m, b)
-}
-func (m *Subs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Subs.Marshal(b, m, deterministic)
-}
-func (m *Subs) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Subs.Merge(m, src)
-}
-func (m *Subs) XXX_Size() int {
-	return xxx_messageInfo_Subs.Size(m)
-}
-func (m *Subs) XXX_DiscardUnknown() {
-	xxx_messageInfo_Subs.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Subs proto.InternalMessageInfo
-
-func (m *Subs) GetSpans() map[string]bool {
+func (m *Span) GetTimeout() int32 {
 	if m != nil {
-		return m.Spans
+		return m.Timeout
 	}
-	return nil
+	return 0
 }
 
-func (m *Subs) GetTags() map[string]bool {
+func (m *Span) GetTimes() int64 {
 	if m != nil {
-		return m.Tags
+		return m.Times
 	}
-	return nil
+	return 0
+}
+
+func (m *Span) GetOperate() string {
+	if m != nil {
+		return m.Operate
+	}
+	return ""
+}
+
+func (m *Span) GetFlag() bool {
+	if m != nil {
+		return m.Flag
+	}
+	return false
+}
+
+func (m *Span) GetLogging() bool {
+	if m != nil {
+		return m.Logging
+	}
+	return false
+}
+
+func (m *Span) GetPlatform() string {
+	if m != nil {
+		return m.Platform
+	}
+	return ""
+}
+
+//用来描述链路/节点生命周期内任何事件的标记
+type Tag struct {
+	//关联的链路或者节点Id
+	OwnId string `protobuf:"bytes,1,opt,name=ownId,proto3" json:"ownId,omitempty"`
+	//tag标识
+	TagId string `protobuf:"bytes,2,opt,name=tagId,proto3" json:"tagId,omitempty"`
+	//事件描述的内容
+	Desc string `protobuf:"bytes,3,opt,name=desc,proto3" json:"desc,omitempty"`
+	//事件发生的时间
+	Times int64 `protobuf:"varint,4,opt,name=times,proto3" json:"times,omitempty"`
+	//是否需要记录到日志库中
+	Logging bool `protobuf:"varint,5,opt,name=logging,proto3" json:"logging,omitempty"`
+	//平台标识
+	Platform             string   `protobuf:"bytes,6,opt,name=Platform,proto3" json:"Platform,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Tag) Reset()         { *m = Tag{} }
+func (m *Tag) String() string { return proto.CompactTextString(m) }
+func (*Tag) ProtoMessage()    {}
+func (*Tag) Descriptor() ([]byte, []int) {
+	return fileDescriptor_65eadb3a877d1afd, []int{2}
+}
+
+func (m *Tag) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Tag.Unmarshal(m, b)
+}
+func (m *Tag) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Tag.Marshal(b, m, deterministic)
+}
+func (m *Tag) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Tag.Merge(m, src)
+}
+func (m *Tag) XXX_Size() int {
+	return xxx_messageInfo_Tag.Size(m)
+}
+func (m *Tag) XXX_DiscardUnknown() {
+	xxx_messageInfo_Tag.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Tag proto.InternalMessageInfo
+
+func (m *Tag) GetOwnId() string {
+	if m != nil {
+		return m.OwnId
+	}
+	return ""
+}
+
+func (m *Tag) GetTagId() string {
+	if m != nil {
+		return m.TagId
+	}
+	return ""
+}
+
+func (m *Tag) GetDesc() string {
+	if m != nil {
+		return m.Desc
+	}
+	return ""
+}
+
+func (m *Tag) GetTimes() int64 {
+	if m != nil {
+		return m.Times
+	}
+	return 0
+}
+
+func (m *Tag) GetLogging() bool {
+	if m != nil {
+		return m.Logging
+	}
+	return false
+}
+
+func (m *Tag) GetPlatform() string {
+	if m != nil {
+		return m.Platform
+	}
+	return ""
 }
 
 type BaseResponse struct {
@@ -241,7 +366,7 @@ func (m *BaseResponse) Reset()         { *m = BaseResponse{} }
 func (m *BaseResponse) String() string { return proto.CompactTextString(m) }
 func (*BaseResponse) ProtoMessage()    {}
 func (*BaseResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_65eadb3a877d1afd, []int{2}
+	return fileDescriptor_65eadb3a877d1afd, []int{3}
 }
 
 func (m *BaseResponse) XXX_Unmarshal(b []byte) error {
@@ -276,182 +401,6 @@ func (m *BaseResponse) GetMessage() string {
 	return ""
 }
 
-//节点
-type Span struct {
-	//节点标识
-	SpanId string `protobuf:"bytes,1,opt,name=spanId,proto3" json:"spanId,omitempty"`
-	//对应的方法或者代码块的标识
-	SecondId string `protobuf:"bytes,2,opt,name=secondId,proto3" json:"secondId,omitempty"`
-	//节点创建的时间
-	SpanSTime int64 `protobuf:"varint,3,opt,name=spanSTime,proto3" json:"spanSTime,omitempty"`
-	//节点结束的时间
-	SpanETime int64 `protobuf:"varint,4,opt,name=spanETime,proto3" json:"spanETime,omitempty"`
-	//此节点生命周期内描述事件详情的标记集合
-	Tags []*Tag `protobuf:"bytes,5,rep,name=Tags,proto3" json:"Tags,omitempty"`
-	//关联的链路标识
-	TraceId string `protobuf:"bytes,6,opt,name=TraceId,proto3" json:"TraceId,omitempty"`
-	//生命周期的时长
-	Duration int64 `protobuf:"varint,7,opt,name=duration,proto3" json:"duration,omitempty"`
-	//上层span标识
-	FromId               string   `protobuf:"bytes,8,opt,name=fromId,proto3" json:"fromId,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Span) Reset()         { *m = Span{} }
-func (m *Span) String() string { return proto.CompactTextString(m) }
-func (*Span) ProtoMessage()    {}
-func (*Span) Descriptor() ([]byte, []int) {
-	return fileDescriptor_65eadb3a877d1afd, []int{3}
-}
-
-func (m *Span) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Span.Unmarshal(m, b)
-}
-func (m *Span) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Span.Marshal(b, m, deterministic)
-}
-func (m *Span) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Span.Merge(m, src)
-}
-func (m *Span) XXX_Size() int {
-	return xxx_messageInfo_Span.Size(m)
-}
-func (m *Span) XXX_DiscardUnknown() {
-	xxx_messageInfo_Span.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Span proto.InternalMessageInfo
-
-func (m *Span) GetSpanId() string {
-	if m != nil {
-		return m.SpanId
-	}
-	return ""
-}
-
-func (m *Span) GetSecondId() string {
-	if m != nil {
-		return m.SecondId
-	}
-	return ""
-}
-
-func (m *Span) GetSpanSTime() int64 {
-	if m != nil {
-		return m.SpanSTime
-	}
-	return 0
-}
-
-func (m *Span) GetSpanETime() int64 {
-	if m != nil {
-		return m.SpanETime
-	}
-	return 0
-}
-
-func (m *Span) GetTags() []*Tag {
-	if m != nil {
-		return m.Tags
-	}
-	return nil
-}
-
-func (m *Span) GetTraceId() string {
-	if m != nil {
-		return m.TraceId
-	}
-	return ""
-}
-
-func (m *Span) GetDuration() int64 {
-	if m != nil {
-		return m.Duration
-	}
-	return 0
-}
-
-func (m *Span) GetFromId() string {
-	if m != nil {
-		return m.FromId
-	}
-	return ""
-}
-
-//用来描述节点生命周期内任何事件的标记
-type Tag struct {
-	TraceId              string   `protobuf:"bytes,1,opt,name=traceId,proto3" json:"traceId,omitempty"`
-	SpanId               string   `protobuf:"bytes,2,opt,name=spanId,proto3" json:"spanId,omitempty"`
-	TagId                string   `protobuf:"bytes,3,opt,name=tagId,proto3" json:"tagId,omitempty"`
-	Desc                 string   `protobuf:"bytes,4,opt,name=desc,proto3" json:"desc,omitempty"`
-	Time                 int64    `protobuf:"varint,5,opt,name=time,proto3" json:"time,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Tag) Reset()         { *m = Tag{} }
-func (m *Tag) String() string { return proto.CompactTextString(m) }
-func (*Tag) ProtoMessage()    {}
-func (*Tag) Descriptor() ([]byte, []int) {
-	return fileDescriptor_65eadb3a877d1afd, []int{4}
-}
-
-func (m *Tag) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Tag.Unmarshal(m, b)
-}
-func (m *Tag) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Tag.Marshal(b, m, deterministic)
-}
-func (m *Tag) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Tag.Merge(m, src)
-}
-func (m *Tag) XXX_Size() int {
-	return xxx_messageInfo_Tag.Size(m)
-}
-func (m *Tag) XXX_DiscardUnknown() {
-	xxx_messageInfo_Tag.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Tag proto.InternalMessageInfo
-
-func (m *Tag) GetTraceId() string {
-	if m != nil {
-		return m.TraceId
-	}
-	return ""
-}
-
-func (m *Tag) GetSpanId() string {
-	if m != nil {
-		return m.SpanId
-	}
-	return ""
-}
-
-func (m *Tag) GetTagId() string {
-	if m != nil {
-		return m.TagId
-	}
-	return ""
-}
-
-func (m *Tag) GetDesc() string {
-	if m != nil {
-		return m.Desc
-	}
-	return ""
-}
-
-func (m *Tag) GetTime() int64 {
-	if m != nil {
-		return m.Time
-	}
-	return 0
-}
-
 type Ping struct {
 	Ping                 bool     `protobuf:"varint,1,opt,name=ping,proto3" json:"ping,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -463,7 +412,7 @@ func (m *Ping) Reset()         { *m = Ping{} }
 func (m *Ping) String() string { return proto.CompactTextString(m) }
 func (*Ping) ProtoMessage()    {}
 func (*Ping) Descriptor() ([]byte, []int) {
-	return fileDescriptor_65eadb3a877d1afd, []int{5}
+	return fileDescriptor_65eadb3a877d1afd, []int{4}
 }
 
 func (m *Ping) XXX_Unmarshal(b []byte) error {
@@ -502,7 +451,7 @@ func (m *Pong) Reset()         { *m = Pong{} }
 func (m *Pong) String() string { return proto.CompactTextString(m) }
 func (*Pong) ProtoMessage()    {}
 func (*Pong) Descriptor() ([]byte, []int) {
-	return fileDescriptor_65eadb3a877d1afd, []int{6}
+	return fileDescriptor_65eadb3a877d1afd, []int{5}
 }
 
 func (m *Pong) XXX_Unmarshal(b []byte) error {
@@ -532,13 +481,9 @@ func (m *Pong) GetPong() bool {
 
 func init() {
 	proto.RegisterType((*Trace)(nil), "bean.Trace")
-	proto.RegisterMapType((map[string]*Span)(nil), "bean.Trace.SpansEntry")
-	proto.RegisterType((*Subs)(nil), "bean.subs")
-	proto.RegisterMapType((map[string]bool)(nil), "bean.subs.SpansEntry")
-	proto.RegisterMapType((map[string]bool)(nil), "bean.subs.TagsEntry")
-	proto.RegisterType((*BaseResponse)(nil), "bean.baseResponse")
 	proto.RegisterType((*Span)(nil), "bean.Span")
 	proto.RegisterType((*Tag)(nil), "bean.Tag")
+	proto.RegisterType((*BaseResponse)(nil), "bean.baseResponse")
 	proto.RegisterType((*Ping)(nil), "bean.ping")
 	proto.RegisterType((*Pong)(nil), "bean.pong")
 }
@@ -546,47 +491,37 @@ func init() {
 func init() { proto.RegisterFile("bean/tyto.proto", fileDescriptor_65eadb3a877d1afd) }
 
 var fileDescriptor_65eadb3a877d1afd = []byte{
-	// 639 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0xcd, 0x6e, 0xd3, 0x40,
-	0x10, 0xae, 0x13, 0x3b, 0xb1, 0x27, 0xe5, 0x47, 0xab, 0x52, 0xad, 0x2c, 0xa8, 0x2c, 0x9f, 0x82,
-	0x4a, 0x53, 0x29, 0x1c, 0xa8, 0x10, 0x97, 0x4a, 0x14, 0x91, 0x0b, 0x42, 0x6e, 0x5e, 0x60, 0x93,
-	0xdd, 0x9a, 0xa8, 0x89, 0xd7, 0xf2, 0xda, 0x95, 0xfa, 0x1e, 0x3c, 0x18, 0x2f, 0xc0, 0x89, 0x17,
-	0x41, 0x33, 0xfe, 0xdb, 0x22, 0x5a, 0xca, 0xc9, 0xf3, 0xcd, 0xcc, 0xee, 0x7c, 0x33, 0xfb, 0x8d,
-	0xe1, 0xd9, 0x4a, 0x89, 0xec, 0xb4, 0xbc, 0x2d, 0xf5, 0x2c, 0x2f, 0x74, 0xa9, 0x99, 0x8b, 0x8e,
-	0xf8, 0xe7, 0x10, 0xbc, 0x65, 0x21, 0xd6, 0x8a, 0x71, 0x18, 0x97, 0x68, 0x2c, 0x24, 0x77, 0x22,
-	0x67, 0x1a, 0x24, 0x2d, 0x64, 0x21, 0xf8, 0x46, 0xad, 0x75, 0x26, 0x17, 0x92, 0x0f, 0x28, 0xd4,
-	0x61, 0x76, 0x04, 0x40, 0x69, 0x97, 0xcb, 0xcd, 0x4e, 0xf1, 0x61, 0xe4, 0x4c, 0x87, 0x89, 0xe5,
-	0xe9, 0xe2, 0x17, 0x14, 0x77, 0xad, 0x38, 0x79, 0xd8, 0x1b, 0xf0, 0x4c, 0x2e, 0x32, 0xc3, 0xbd,
-	0x68, 0x38, 0x9d, 0xcc, 0x0f, 0x67, 0xc8, 0x6a, 0x46, 0x8c, 0x66, 0x97, 0x18, 0xb8, 0xc8, 0xca,
-	0xe2, 0x36, 0xa9, 0x93, 0xd8, 0x21, 0x8c, 0x2a, 0xa3, 0x8a, 0x85, 0xe4, 0x23, 0xe2, 0xd1, 0x20,
-	0x64, 0x88, 0xd6, 0x17, 0xb1, 0x53, 0x7c, 0x5c, 0x33, 0x6c, 0x31, 0xc6, 0x64, 0x55, 0x88, 0x72,
-	0xa3, 0x33, 0xee, 0x53, 0xfd, 0x0e, 0x63, 0xcf, 0x5b, 0x9d, 0xa6, 0x9b, 0x2c, 0xe5, 0x41, 0xe4,
-	0x4c, 0xfd, 0xa4, 0x85, 0x8c, 0x81, 0x2b, 0x95, 0x59, 0x73, 0xa0, 0xdb, 0xc8, 0xc6, 0x9b, 0xf2,
-	0xad, 0x28, 0xaf, 0x74, 0xb1, 0xe3, 0x93, 0xba, 0x4a, 0x8b, 0x69, 0x7a, 0x9b, 0x9d, 0xd2, 0x55,
-	0xc9, 0xf7, 0xa9, 0x48, 0x0b, 0xd9, 0x11, 0xb8, 0xa6, 0x5a, 0x19, 0xfe, 0x24, 0x72, 0xa6, 0x93,
-	0x39, 0xd4, 0x0d, 0xa2, 0x27, 0x21, 0x3f, 0xf6, 0x74, 0x55, 0xe8, 0xdd, 0x42, 0xf2, 0xa7, 0x75,
-	0x4f, 0x35, 0x0a, 0x3f, 0x02, 0xf4, 0x03, 0x60, 0xcf, 0x61, 0x78, 0xad, 0x6e, 0x9b, 0x97, 0x41,
-	0x93, 0x45, 0xe0, 0xdd, 0x88, 0x6d, 0xa5, 0xe8, 0x49, 0xba, 0x8b, 0xf1, 0x48, 0x52, 0x07, 0xde,
-	0x0f, 0xce, 0x9c, 0xf8, 0x87, 0x53, 0x97, 0x67, 0xc7, 0xed, 0xa0, 0x1d, 0x1a, 0xf4, 0x8b, 0x9e,
-	0xc7, 0x5f, 0xe6, 0x3c, 0x05, 0xb7, 0x14, 0xa9, 0xe1, 0x03, 0xca, 0x3d, 0xb0, 0x72, 0x97, 0x22,
-	0x6d, 0x52, 0x29, 0x23, 0x3c, 0xfb, 0x07, 0xcb, 0x03, 0x9b, 0xa5, 0x6f, 0x31, 0x0b, 0xdf, 0x41,
-	0xd0, 0x5d, 0xf6, 0x3f, 0x07, 0xe3, 0x0f, 0xb0, 0xbf, 0x12, 0x46, 0x25, 0xca, 0xe4, 0x3a, 0x33,
-	0x0a, 0x9f, 0x6a, 0xad, 0xa5, 0xa2, 0xc3, 0x5e, 0x42, 0x36, 0x3e, 0xc7, 0x4e, 0x19, 0x23, 0x52,
-	0xd5, 0x28, 0xb6, 0x85, 0xf1, 0x2f, 0x07, 0x5c, 0x64, 0x8c, 0x73, 0xc7, 0x66, 0x3b, 0xb9, 0x37,
-	0xe8, 0x41, 0xb5, 0xbf, 0x84, 0x00, 0xb3, 0x6c, 0xb1, 0xf7, 0x8e, 0x36, 0x6a, 0x4b, 0xbd, 0x77,
-	0xb0, 0x57, 0xe0, 0x62, 0xbf, 0x8d, 0xd0, 0x83, 0x46, 0xe8, 0x22, 0x4d, 0xc8, 0x8d, 0x8c, 0x97,
-	0xcd, 0xfa, 0xd5, 0xda, 0x6e, 0xe1, 0x1d, 0x01, 0x8f, 0xff, 0x10, 0x70, 0x2f, 0x1e, 0xdf, 0x16,
-	0x4f, 0x5c, 0xc1, 0x70, 0x29, 0xd2, 0x07, 0x76, 0xba, 0xef, 0x7e, 0x70, 0xa7, 0xfb, 0x03, 0xf0,
-	0x4a, 0x91, 0x2e, 0x24, 0x75, 0x17, 0x24, 0x35, 0xe8, 0xb6, 0xc1, 0xb5, 0xb6, 0x81, 0x81, 0x8b,
-	0x12, 0xe7, 0x1e, 0x51, 0x22, 0x3b, 0x0e, 0xc1, 0xcd, 0x9b, 0xed, 0xc1, 0x2f, 0x15, 0xf5, 0x13,
-	0xb2, 0x29, 0xa6, 0x9b, 0x98, 0xb6, 0x62, 0x3a, 0x4b, 0xe7, 0x19, 0xec, 0x53, 0xb7, 0x9f, 0x45,
-	0x26, 0xb7, 0xaa, 0x60, 0x27, 0xe0, 0x9f, 0x4b, 0x59, 0xff, 0x97, 0x26, 0xd6, 0x2f, 0x21, 0x64,
-	0x35, 0xb0, 0xdf, 0x3f, 0xde, 0x63, 0xa7, 0x00, 0x9f, 0xb6, 0x95, 0xf9, 0xf6, 0xd8, 0x03, 0xf3,
-	0xef, 0x0e, 0x4c, 0x50, 0x04, 0x6d, 0xbd, 0x63, 0x18, 0x9f, 0x4b, 0x49, 0xb2, 0xb0, 0xf6, 0xe8,
-	0x9e, 0x6a, 0x27, 0x10, 0x50, 0xb5, 0x47, 0xa6, 0xbf, 0x86, 0x11, 0xf6, 0x22, 0x52, 0xd6, 0xbf,
-	0xf9, 0x3d, 0xb4, 0x4e, 0x20, 0xb8, 0x56, 0x2a, 0x3f, 0xdf, 0x6e, 0x6e, 0x14, 0x8b, 0xc0, 0xfd,
-	0x8a, 0xb3, 0x6c, 0x2a, 0xe0, 0x0c, 0xc3, 0xd6, 0xd6, 0x59, 0x1a, 0xef, 0xad, 0x46, 0xf4, 0x23,
-	0x7f, 0xfb, 0x3b, 0x00, 0x00, 0xff, 0xff, 0xd6, 0xcc, 0x4e, 0x51, 0xdb, 0x05, 0x00, 0x00,
+	// 471 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x94, 0xc1, 0x8e, 0xd3, 0x30,
+	0x10, 0x86, 0x37, 0xdb, 0xa4, 0x4d, 0xa6, 0x2b, 0x21, 0x59, 0x08, 0x59, 0x3d, 0x45, 0x39, 0x15,
+	0xa1, 0x2d, 0xd2, 0x72, 0x40, 0x42, 0x70, 0xe8, 0x8d, 0x5e, 0xd0, 0x2a, 0xf4, 0x05, 0xdc, 0xda,
+	0xb5, 0x2a, 0x12, 0x3b, 0x8a, 0x53, 0x10, 0x8f, 0xc1, 0x03, 0xf0, 0x76, 0x3c, 0x08, 0x9a, 0x71,
+	0x1c, 0x52, 0x76, 0x73, 0xea, 0x7c, 0x9d, 0x4c, 0xfe, 0xf9, 0x9a, 0xb8, 0xf0, 0xe2, 0xa0, 0x84,
+	0x79, 0xdb, 0xfd, 0xec, 0xec, 0xa6, 0x69, 0x6d, 0x67, 0x59, 0x8c, 0x5f, 0x14, 0xbf, 0x6f, 0x21,
+	0xd9, 0xb7, 0xe2, 0xa8, 0xd8, 0x0a, 0xd2, 0xa6, 0x12, 0xdd, 0xc9, 0xb6, 0x35, 0x8f, 0xf2, 0x68,
+	0x9d, 0x95, 0x03, 0x63, 0xef, 0x78, 0x71, 0x9d, 0xad, 0x77, 0x92, 0xdf, 0xfa, 0x5e, 0x60, 0xc6,
+	0x61, 0xd1, 0xe1, 0x0d, 0x76, 0x92, 0xcf, 0xa8, 0x15, 0x90, 0xbd, 0x82, 0xf9, 0xa9, 0xa5, 0x99,
+	0x98, 0x1a, 0x3d, 0xd1, 0xc4, 0xb9, 0x56, 0xf6, 0xd2, 0xf1, 0x24, 0x8f, 0xd6, 0x49, 0x19, 0x90,
+	0xbd, 0x84, 0x04, 0x4b, 0xc7, 0xe7, 0x79, 0xb4, 0x9e, 0x95, 0x1e, 0xf0, 0x7a, 0xdb, 0xa8, 0x56,
+	0x74, 0x8a, 0x2f, 0x7c, 0x42, 0x8f, 0x8c, 0x41, 0x7c, 0xaa, 0x84, 0xe6, 0x69, 0x1e, 0xad, 0xd3,
+	0x92, 0x6a, 0x4c, 0xbd, 0x38, 0xd5, 0xee, 0x24, 0xcf, 0x7c, 0xaa, 0x27, 0x74, 0xc0, 0xea, 0x8b,
+	0xa8, 0x15, 0x07, 0xef, 0x10, 0x18, 0x13, 0x2a, 0xab, 0xf5, 0xd9, 0x68, 0xbe, 0xa4, 0x5b, 0x05,
+	0x2c, 0xfe, 0x44, 0x10, 0x7f, 0x6d, 0x84, 0x19, 0x6b, 0x46, 0x4f, 0x34, 0x5d, 0x23, 0xcc, 0xf0,
+	0xd3, 0xf4, 0x34, 0xd2, 0x9f, 0x4d, 0xe9, 0xc7, 0x13, 0xfa, 0xc9, 0x84, 0xfe, 0xfc, 0x79, 0xfd,
+	0xc5, 0x48, 0x7f, 0xa4, 0x92, 0x5e, 0xa9, 0x5c, 0x3d, 0xe0, 0xec, 0xfa, 0x01, 0x17, 0xbf, 0x22,
+	0x98, 0xed, 0x85, 0xc6, 0x0d, 0xec, 0x0f, 0x33, 0x38, 0x7a, 0xa0, 0xbd, 0x84, 0x1e, 0x04, 0x3d,
+	0x60, 0xba, 0x54, 0xee, 0xd8, 0xdb, 0x51, 0xfd, 0xcf, 0x20, 0xfe, 0xcf, 0x20, 0xec, 0x94, 0x3c,
+	0xd9, 0xe9, 0x31, 0xec, 0xe4, 0xe5, 0x06, 0x2e, 0x3e, 0xc2, 0xdd, 0x41, 0x38, 0x55, 0x2a, 0xd7,
+	0x58, 0xe3, 0xc8, 0xf6, 0x68, 0xa5, 0xa2, 0xd5, 0x92, 0x92, 0x6a, 0xbc, 0x73, 0xad, 0x9c, 0x13,
+	0x5a, 0xf5, 0xbb, 0x05, 0x2c, 0x56, 0x10, 0x37, 0x98, 0xc0, 0xfc, 0x27, 0x4d, 0xa5, 0x25, 0xd5,
+	0xd4, 0xb3, 0x7d, 0xcf, 0x8e, 0x7a, 0xd6, 0xe8, 0x87, 0x4f, 0x70, 0x47, 0xe7, 0xe1, 0xb3, 0x30,
+	0xb2, 0x52, 0x2d, 0xbb, 0x87, 0x74, 0x2b, 0xa5, 0x3f, 0x22, 0xcb, 0x0d, 0x9e, 0x99, 0x0d, 0xc1,
+	0x8a, 0x79, 0x18, 0xaf, 0x58, 0xdc, 0x3c, 0x7c, 0x80, 0x25, 0xbe, 0x2e, 0x61, 0xfa, 0x0d, 0x2c,
+	0xb6, 0x52, 0xd2, 0x0b, 0x04, 0xfe, 0x7a, 0xac, 0x27, 0x66, 0xdf, 0x03, 0xec, 0x85, 0x0e, 0xa3,
+	0xaf, 0x61, 0x8e, 0xc1, 0x42, 0xb3, 0xac, 0x8f, 0x15, 0x7a, 0x62, 0xf0, 0x1e, 0xb2, 0x6f, 0x4a,
+	0x35, 0xdb, 0xea, 0xfc, 0x5d, 0xb1, 0x1c, 0xe2, 0x47, 0x14, 0xef, 0xf3, 0x50, 0x78, 0x15, 0x6a,
+	0x6b, 0x74, 0x71, 0x73, 0x98, 0xd3, 0x1f, 0xc0, 0xbb, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x54,
+	0x3f, 0x1a, 0xb6, 0x13, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -602,7 +537,6 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type TraceHandlerClient interface {
 	AddTrace(ctx context.Context, in *Trace, opts ...grpc.CallOption) (*BaseResponse, error)
-	FlushTrace(ctx context.Context, in *Trace, opts ...grpc.CallOption) (*BaseResponse, error)
 }
 
 type traceHandlerClient struct {
@@ -622,19 +556,9 @@ func (c *traceHandlerClient) AddTrace(ctx context.Context, in *Trace, opts ...gr
 	return out, nil
 }
 
-func (c *traceHandlerClient) FlushTrace(ctx context.Context, in *Trace, opts ...grpc.CallOption) (*BaseResponse, error) {
-	out := new(BaseResponse)
-	err := c.cc.Invoke(ctx, "/bean.TraceHandler/FlushTrace", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // TraceHandlerServer is the server API for TraceHandler service.
 type TraceHandlerServer interface {
 	AddTrace(context.Context, *Trace) (*BaseResponse, error)
-	FlushTrace(context.Context, *Trace) (*BaseResponse, error)
 }
 
 func RegisterTraceHandlerServer(s *grpc.Server, srv TraceHandlerServer) {
@@ -659,24 +583,6 @@ func _TraceHandler_AddTrace_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TraceHandler_FlushTrace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Trace)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TraceHandlerServer).FlushTrace(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/bean.TraceHandler/FlushTrace",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TraceHandlerServer).FlushTrace(ctx, req.(*Trace))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _TraceHandler_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bean.TraceHandler",
 	HandlerType: (*TraceHandlerServer)(nil),
@@ -684,10 +590,6 @@ var _TraceHandler_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddTrace",
 			Handler:    _TraceHandler_AddTrace_Handler,
-		},
-		{
-			MethodName: "FlushTrace",
-			Handler:    _TraceHandler_FlushTrace_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -699,8 +601,6 @@ var _TraceHandler_serviceDesc = grpc.ServiceDesc{
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type SpanHandlerClient interface {
 	AddSpan(ctx context.Context, in *Span, opts ...grpc.CallOption) (*BaseResponse, error)
-	FlushSpan(ctx context.Context, in *Span, opts ...grpc.CallOption) (*BaseResponse, error)
-	AddTag(ctx context.Context, in *Tag, opts ...grpc.CallOption) (*BaseResponse, error)
 }
 
 type spanHandlerClient struct {
@@ -720,29 +620,9 @@ func (c *spanHandlerClient) AddSpan(ctx context.Context, in *Span, opts ...grpc.
 	return out, nil
 }
 
-func (c *spanHandlerClient) FlushSpan(ctx context.Context, in *Span, opts ...grpc.CallOption) (*BaseResponse, error) {
-	out := new(BaseResponse)
-	err := c.cc.Invoke(ctx, "/bean.SpanHandler/FlushSpan", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *spanHandlerClient) AddTag(ctx context.Context, in *Tag, opts ...grpc.CallOption) (*BaseResponse, error) {
-	out := new(BaseResponse)
-	err := c.cc.Invoke(ctx, "/bean.SpanHandler/AddTag", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // SpanHandlerServer is the server API for SpanHandler service.
 type SpanHandlerServer interface {
 	AddSpan(context.Context, *Span) (*BaseResponse, error)
-	FlushSpan(context.Context, *Span) (*BaseResponse, error)
-	AddTag(context.Context, *Tag) (*BaseResponse, error)
 }
 
 func RegisterSpanHandlerServer(s *grpc.Server, srv SpanHandlerServer) {
@@ -767,42 +647,6 @@ func _SpanHandler_AddSpan_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SpanHandler_FlushSpan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Span)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SpanHandlerServer).FlushSpan(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/bean.SpanHandler/FlushSpan",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SpanHandlerServer).FlushSpan(ctx, req.(*Span))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SpanHandler_AddTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Tag)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SpanHandlerServer).AddTag(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/bean.SpanHandler/AddTag",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SpanHandlerServer).AddTag(ctx, req.(*Tag))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _SpanHandler_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bean.SpanHandler",
 	HandlerType: (*SpanHandlerServer)(nil),
@@ -811,13 +655,69 @@ var _SpanHandler_serviceDesc = grpc.ServiceDesc{
 			MethodName: "AddSpan",
 			Handler:    _SpanHandler_AddSpan_Handler,
 		},
-		{
-			MethodName: "FlushSpan",
-			Handler:    _SpanHandler_FlushSpan_Handler,
-		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "bean/tyto.proto",
+}
+
+// TagHandlerClient is the client API for TagHandler service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type TagHandlerClient interface {
+	AddTag(ctx context.Context, in *Tag, opts ...grpc.CallOption) (*BaseResponse, error)
+}
+
+type tagHandlerClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewTagHandlerClient(cc *grpc.ClientConn) TagHandlerClient {
+	return &tagHandlerClient{cc}
+}
+
+func (c *tagHandlerClient) AddTag(ctx context.Context, in *Tag, opts ...grpc.CallOption) (*BaseResponse, error) {
+	out := new(BaseResponse)
+	err := c.cc.Invoke(ctx, "/bean.TagHandler/AddTag", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// TagHandlerServer is the server API for TagHandler service.
+type TagHandlerServer interface {
+	AddTag(context.Context, *Tag) (*BaseResponse, error)
+}
+
+func RegisterTagHandlerServer(s *grpc.Server, srv TagHandlerServer) {
+	s.RegisterService(&_TagHandler_serviceDesc, srv)
+}
+
+func _TagHandler_AddTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Tag)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TagHandlerServer).AddTag(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bean.TagHandler/AddTag",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TagHandlerServer).AddTag(ctx, req.(*Tag))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _TagHandler_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "bean.TagHandler",
+	HandlerType: (*TagHandlerServer)(nil),
+	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "AddTag",
-			Handler:    _SpanHandler_AddTag_Handler,
+			Handler:    _TagHandler_AddTag_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

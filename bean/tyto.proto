@@ -2,40 +2,70 @@ syntax = "proto3";
 
 package bean;
 
-//链路
+
+//用来记录链路的相关对象
 message Trace{
-    //链路标识
-    string traceId =1; 
-    //对应的请求或者入口的标识             
-    string secondId =2; 
-    //链路生成的时间           
-    int64 traceSTime =3;    
-    //链路完成的时间    
-    int64 traceETime =4; 
-    //所有链路生命周期内的相关节点集合          
-    map<string, Span> spans =5;    
-    //用户标识
-    string userId=6;
-    //用户名称
-    string userName=7; 
-    //生命周期的时长
-    int64 duration=8;
-    //是否记录到日志中
-    bool logging=9;
-    //描述
-    string desc=10;
     //平台标识
-    string platform=11;
-    //超时时间 单位为秒
-    int64 timeout=12;
-    //flush时需要记录的此链路中的所有的span标识和tag标识
-    subs subs = 13;
-    //上层链路标识
-    string fromId=14;
+    string platform=1;
+    //数据标识  自定义的请求标识或者数据标识
+    string customId=2;
+    //链路标识
+    string traceId=3;
+    //流转的上层链路标识
+    string fromId=4;
+    //预计的超时时间 如果链路必须标记结束(flag=true)才生效
+    int32 timeout=5;
+    //发生操作的时间
+    int64 times=6;
+    //进行的操作  链路的开启/结束/生命周期中做的各种操作
+    string operate=7;
+    //如果操作为开启链路 表示此链路是否必须有对应的结束操作
+    bool flag=8;
+    //进行操作的用户标识
+    string userId=9;
+    //进行操作的用户名称
+    string userName=10;
+    //是否将此条记录记录到日志库中
+    bool logging=11;
 }
-message subs{
-    map<string, bool> spans =1; 
-    map<string, bool> tags =2; 
+
+//用来记录节点的相关对象
+message Span{
+    //父级链路标识
+    string traceId=1;
+    //节点标识
+    string spanId=2;
+    //流转的上层链路标识
+    string fromId=3;
+    //预计的超时时间 如果节点必须标记结束(flag=true)才生效
+    int32 timeout=4;
+    //发生操作的时间
+    int64 times=5;
+    //进行的操作  节点的开启/结束
+    string operate=6;
+    //如果操作为开启节点 表示此节点是否必须有对应的结束操作
+    bool flag=7; 
+     //是否将此条记录记录到日志库中
+     bool logging=8;
+     //平台标识
+     string platform=9;
+}
+
+
+//用来描述链路/节点生命周期内任何事件的标记
+message Tag{
+    //关联的链路或者节点Id
+    string ownId=1;
+    //tag标识
+    string tagId=2; 
+    //事件描述的内容
+    string desc=3;   
+     //事件发生的时间
+    int64 times=4;  
+    //是否需要记录到日志库中
+    bool logging=5;  
+    //平台标识
+    string Platform=6;
 }
 
 message baseResponse {
@@ -44,48 +74,17 @@ message baseResponse {
     //返回信息
     string message = 2;
 }
-//节点
-message Span{
-    //节点标识
-    string spanId=1;        
-    //对应的方法或者代码块的标识
-    string secondId=2;      
-    //节点创建的时间
-    int64 spanSTime =3;     
-    //节点结束的时间
-    int64 spanETime=4;      
-    //此节点生命周期内描述事件详情的标记集合
-    repeated Tag Tags=5;    
-    //关联的链路标识
-    string TraceId =6;
-    //生命周期的时长
-    int64 duration=7;
-    //上层span标识
-    string fromId=8;
-}
-
-
-//用来描述节点生命周期内任何事件的标记
-message Tag {
-    string traceId=1;//关联的traceId
-    string spanId=2; //关联的spanId
-    string tagId =3; //tag标识
-	string desc=4;   //事件描述的内容
-	int64 time=5;     //事件发生的时间
-}
-
-
 
 service TraceHandler {
     rpc AddTrace(Trace) returns (baseResponse) {}
-    rpc FlushTrace(Trace) returns (baseResponse) {}
 }
 
 service SpanHandler {
     rpc AddSpan(Span) returns (baseResponse) {}
-    rpc FlushSpan(Span) returns (baseResponse) {}
-    rpc AddTag(Tag) returns (baseResponse) {}
     
+}
+service TagHandler{
+    rpc AddTag(Tag) returns (baseResponse) {} 
 }
 
 message ping{
@@ -97,3 +96,4 @@ message pong{
 service keepAlive {
     rpc Ping(ping) returns (pong) {}
 }
+
