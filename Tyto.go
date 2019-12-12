@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-08-24 17:28:25
- * @LastEditTime: 2019-12-12 09:39:11
+ * @LastEditTime: 2019-12-12 10:06:11
  * @LastEditors: Arthur
  */
 package tyto
@@ -145,6 +145,7 @@ func (self *tytor) Tag(t bean.Tag) {
 		Desc:     t.Desc,
 		Logging:  t.Logging,
 		Platform: self.platform,
+		LogLevel: t.LogLevel,
 	}
 
 	go self.client.Tag(tag)

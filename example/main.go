@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-09-26 08:53:58
- * @LastEditTime: 2019-12-12 09:43:16
+ * @LastEditTime: 2019-12-12 10:05:17
  * @LastEditors: Arthur
  */
 package main
@@ -77,5 +77,5 @@ func span1(tytor tyto.Tyto, fromId string) {
 		Times:   time.Now().UTC().UnixNano(),
 		Logging: false,
 	})
-	tytor.Log(bean.Log{Content: "", Level: "INFO"})
+	tytor.Log(bean.Log{Content: "test log Content", Level: "INFO"})
 }
