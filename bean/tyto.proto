@@ -25,8 +25,6 @@ message Trace{
     string userId=9;
     //进行操作的用户名称
     string userName=10;
-    //是否将此条记录记录到日志库中
-    bool logging=11;
 }
 
 //用来记录节点的相关对象
@@ -45,10 +43,8 @@ message Span{
     string operate=6;
     //如果操作为开启节点 表示此节点是否必须有对应的结束操作
     bool flag=7; 
-     //是否将此条记录记录到日志库中
-     bool logging=8;
      //平台标识
-     string platform=9;
+     string platform=8;
 }
 
 
@@ -66,6 +62,29 @@ message Tag{
     bool logging=5;  
     //平台标识
     string Platform=6;
+    //日志级别 在logging=true时生效
+    string logLevel=7;
+}
+
+//用来记录需要保存到日志数据库的信息
+message Log{
+    //平台标识
+    string platform=1;
+    //日志标识
+    string logId=2;
+    //日志内容
+    string content=3;
+    //记录时间
+    int64 times=4;
+    //日志级别
+    string level=5;
+}
+
+message ping{
+    bool ping =1;
+}
+message pong{
+    bool pong=1;
 }
 
 message baseResponse {
@@ -74,6 +93,7 @@ message baseResponse {
     //返回信息
     string message = 2;
 }
+
 
 service TraceHandler {
     rpc AddTrace(Trace) returns (baseResponse) {}
@@ -87,12 +107,11 @@ service TagHandler{
     rpc AddTag(Tag) returns (baseResponse) {} 
 }
 
-message ping{
-    bool ping =1;
+service LogHandler{
+    rpc AddLog(Log) returns (baseResponse) {} 
 }
-message pong{
-    bool pong=1;
-}
+
+
 service keepAlive {
     rpc Ping(ping) returns (pong) {}
 }

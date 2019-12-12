@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-09-24 15:22:55
- * @LastEditTime: 2019-12-11 10:03:43
+ * @LastEditTime: 2019-12-12 09:47:22
  * @LastEditors: Arthur
  */
 package http
@@ -58,7 +58,21 @@ func (self *HttpClient) Tag(tag *bean.Tag) (int, string) {
 		logs.Error("HttpClient.json.Marshal.err:" + err.Error())
 		return -1, ""
 	}
-	response := do(http.MethodPost, "/tyto/hedwig/span/tag/add", bs)
+	response := do(http.MethodPost, "/tyto/hedwig/tag/add", bs)
+	if response != nil {
+		return response.Code, response.Message
+	}
+	return -1, ""
+}
+
+func (self *HttpClient) Log(log *bean.Log) (int, string) {
+	//POST
+	bs, err := json.Marshal(log)
+	if err != nil {
+		logs.Error("HttpClient.json.Marshal.err:" + err.Error())
+		return -1, ""
+	}
+	response := do(http.MethodPost, "/tyto/hedwig/log/add", bs)
 	if response != nil {
 		return response.Code, response.Message
 	}

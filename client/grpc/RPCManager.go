@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-09-18 15:01:50
- * @LastEditTime: 2019-10-09 17:18:22
+ * @LastEditTime: 2019-12-12 09:29:09
  * @LastEditors: Arthur
  */
 package grpc
@@ -10,7 +10,6 @@ package grpc
 import (
 	"athena.com/tyto/bean"
 	"athena.com/tyto/client/define"
-	"fmt"
 	logs "github.com/cihub/seelog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -217,7 +216,7 @@ func (self *RPCManager) Recover(client *RPCClient) {
 	client.using = false
 	self.clientPools.delete(client)
 	self.usedPools.add(client)
-	fmt.Println("recover", self.clientPools.len(), self.usedPools.len())
+	// fmt.Println("recover", self.clientPools.len(), self.usedPools.len())
 }
 
 type RPCClient struct {

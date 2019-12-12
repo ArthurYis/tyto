@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-09-24 15:31:58
- * @LastEditTime: 2019-12-11 10:03:02
+ * @LastEditTime: 2019-12-12 09:27:52
  * @LastEditors: Arthur
  */
 package grpc
@@ -28,14 +28,13 @@ func (self *GRPCClient) Trace(trace *bean.Trace) (int, string) {
 	cc := bean.NewTraceHandlerClient(client.client)
 	ctx, cancel := context.WithTimeout(context.Background(), TIME_OUT*time.Second)
 	defer cancel()
-	// fmt.Println("trace:", trace)
 	response, err := cc.AddTrace(ctx, trace)
 	if err != nil {
 		logs.Error("grpc.TraceN error:" + err.Error())
 		return errCode.GRPC_METHOD_ERR, err.Error()
 
 	}
-	logs.Debugf("grpc.TraceN response:code = %d,msg = %s", response.Code, response.Message)
+	// logs.Debugf("grpc.TraceN response:code = %d,msg = %s", response.Code, response.Message)
 	return int(response.Code), response.Message
 }
 
@@ -50,7 +49,7 @@ func (self *GRPCClient) Span(span *bean.Span) (int, string) {
 		logs.Error("grpc.SpanN error:" + err.Error())
 		return errCode.GRPC_METHOD_ERR, err.Error()
 	}
-	logs.Debugf("grpc.SpanN response:code = %d,msg = %s", response.Code, response.Message)
+	// logs.Debugf("grpc.SpanN response:code = %d,msg = %s", response.Code, response.Message)
 	return int(response.Code), response.Message
 }
 
@@ -65,6 +64,21 @@ func (self *GRPCClient) Tag(tag *bean.Tag) (int, string) {
 		logs.Error("grpc.tagN error:" + err.Error())
 		return errCode.GRPC_METHOD_ERR, err.Error()
 	}
-	logs.Debugf("grpc.tagN response:code = %d,msg = %s", response.Code, response.Message)
+	// logs.Debugf("grpc.tagN response:code = %d,msg = %s", response.Code, response.Message)
+	return int(response.Code), response.Message
+}
+
+func (self *GRPCClient) Log(log *bean.Log) (int, string) {
+	client := GetRPCManager().getRPC()
+	defer GetRPCManager().Recover(client)
+	cc := bean.NewLogHandlerClient(client.client)
+	ctx, cancel := context.WithTimeout(context.Background(), TIME_OUT*time.Second)
+	defer cancel()
+	response, err := cc.AddLog(ctx, log)
+	if err != nil {
+		logs.Error("grpc.Log error:" + err.Error())
+		return errCode.GRPC_METHOD_ERR, err.Error()
+	}
+	// logs.Debugf("grpc.Log response:code = %d,msg = %s", response.Code, response.Message)
 	return int(response.Code), response.Message
 }

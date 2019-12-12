@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-09-26 08:53:58
- * @LastEditTime: 2019-12-11 10:28:29
+ * @LastEditTime: 2019-12-12 09:43:16
  * @LastEditors: Arthur
  */
 package main
@@ -40,37 +40,42 @@ func RandString(len int) string {
 
 func trace(secondId string) {
 	tytor := tyto.Default("platform_001", secondId)
-	traceId := tytor.Trace(bean.Trace{UserId: "userId002", UserName: "userName002", Logging: false, FromId: "0", Timeout: 10, Flag: true})
+	traceId := tytor.Trace(bean.Trace{UserId: "userId002", UserName: "userName002", FromId: "0", Timeout: 10, Flag: true})
 	defer tytor.FlushT()
 	span(tytor, "0")
 	tytor.Tag(bean.Tag{
-		OwnId: traceId,
-		TagId: RandString(10),
-		Desc:  "trace1",
-		Times: time.Now().UTC().UnixNano(),
+		OwnId:    traceId,
+		TagId:    RandString(10),
+		Desc:     "trace1",
+		Times:    time.Now().UTC().UnixNano(),
+		Logging:  true,
+		LogLevel: "DEBUG",
 	})
 }
 
 func span(tytor tyto.Tyto, fromId string) {
 
-	spanId := tytor.Span(bean.Span{Timeout: 10, Flag: true, FromId: fromId, Logging: false})
+	spanId := tytor.Span(bean.Span{Timeout: 10, Flag: true, FromId: fromId})
 	defer tytor.FlushS(spanId)
 	span1(tytor, spanId)
 	tytor.Tag(bean.Tag{
-		OwnId: spanId,
-		TagId: RandString(10),
-		Desc:  "tage1",
-		Times: time.Now().UTC().UnixNano(),
+		OwnId:   spanId,
+		TagId:   RandString(10),
+		Desc:    "tage1",
+		Times:   time.Now().UTC().UnixNano(),
+		Logging: false,
 	})
 }
 
 func span1(tytor tyto.Tyto, fromId string) {
-	spanId := tytor.Span(bean.Span{Timeout: 10, Flag: true, FromId: fromId, Logging: false})
+	spanId := tytor.Span(bean.Span{Timeout: 10, Flag: true, FromId: fromId})
 	defer tytor.FlushS(spanId)
 	tytor.Tag(bean.Tag{
-		OwnId: spanId,
-		TagId: RandString(10),
-		Desc:  "tage2",
-		Times: time.Now().UTC().UnixNano(),
+		OwnId:   spanId,
+		TagId:   RandString(10),
+		Desc:    "tage2",
+		Times:   time.Now().UTC().UnixNano(),
+		Logging: false,
 	})
+	tytor.Log(bean.Log{Content: "", Level: "INFO"})
 }

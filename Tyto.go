@@ -2,7 +2,7 @@
  * @Description:
  * @Author: Arthur
  * @Date: 2019-08-24 17:28:25
- * @LastEditTime: 2019-12-11 10:02:15
+ * @LastEditTime: 2019-12-12 09:39:11
  * @LastEditors: Arthur
  */
 package tyto
@@ -29,12 +29,15 @@ type Tyto interface {
 	FlushS(string)
 
 	Tag(bean.Tag) //在跟踪过程中对某个点进行注解说明
+
+	Log(bean.Log) //记录日志
 }
 
 type Client interface {
 	Trace(*bean.Trace) (int, string)
 	Span(*bean.Span) (int, string)
 	Tag(*bean.Tag) (int, string)
+	Log(*bean.Log) (int, string)
 }
 
 type tytor struct {
@@ -68,7 +71,6 @@ func (self *tytor) Trace(t bean.Trace) string {
 		Flag:     t.Flag,
 		UserId:   t.UserId,
 		UserName: t.UserName,
-		Logging:  t.Logging,
 	}
 
 	if len(strings.TrimSpace(t.FromId)) == 0 {
@@ -94,7 +96,6 @@ func (self *tytor) FlushT() {
 		Flag:     self.trace.Flag,
 		UserId:   self.trace.UserId,
 		UserName: self.trace.UserName,
-		Logging:  self.trace.Logging,
 	}
 	go self.client.Trace(trace)
 }
@@ -107,7 +108,6 @@ func (self *tytor) Span(s bean.Span) string {
 		Times:    time.Now().UTC().UnixNano(),
 		Operate:  "S",
 		Flag:     s.Flag,
-		Logging:  s.Logging,
 		Platform: self.platform,
 	}
 
@@ -131,7 +131,6 @@ func (self *tytor) FlushS(spanId string) {
 		Times:    time.Now().UTC().UnixNano(),
 		Operate:  "E",
 		Flag:     s.Flag,
-		Logging:  s.Logging,
 		Platform: self.platform,
 	}
 	delete(self.spans, spanId)
@@ -149,6 +148,18 @@ func (self *tytor) Tag(t bean.Tag) {
 	}
 
 	go self.client.Tag(tag)
+}
+
+func (self *tytor) Log(l bean.Log) {
+	log := &bean.Log{
+		LogId:    self.ID.Generate().String(),
+		Times:    time.Now().UTC().UnixNano(),
+		Content:  l.Content,
+		Level:    l.Level,
+		Platform: self.platform,
+	}
+
+	go self.client.Log(log)
 }
 
 func init() {
